@@ -115,7 +115,7 @@ final class ProductSlotTest extends TestCase
 
     private function water(): Product
     {
-        return new Product(
+        return Product::create(
             ProductCode::fromValue('WATER'),
             ProductSelector::fromValue('GET-WATER'),
             Money::fromMinor(65),

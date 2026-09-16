@@ -51,7 +51,7 @@ final class VendingMachineTest extends TestCase
     private function slot(string $code, int $priceMinor, int $quantity): ProductSlot
     {
         return ProductSlot::fromProductAndQuantity(
-            new Product(
+            Product::create(
                 ProductCode::fromValue($code),
                 ProductSelector::fromValue('GET-' . $code),
                 Money::fromMinor($priceMinor),

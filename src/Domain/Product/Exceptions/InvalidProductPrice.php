@@ -8,8 +8,18 @@ use DomainException;
 
 final class InvalidProductPrice extends DomainException
 {
-    public function __construct()
+    public static function notPositive(): self
     {
-        parent::__construct('Product price must be positive.');
+        return new self('Product price must be positive.');
+    }
+
+    public static function notDivisibleBySmallestCoin(): self
+    {
+        return new self('Product price must be divisible by the smallest coin denomination.');
+    }
+
+    private function __construct(string $message)
+    {
+        parent::__construct($message);
     }
 }

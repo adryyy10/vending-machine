@@ -22,7 +22,7 @@ final class ProductTest extends TestCase
         $selector = ProductSelector::fromValue($selectorValue);
         $price = Money::fromMinor($priceMinor);
 
-        $product = new Product($code, $selector, $price);
+        $product = Product::create($code, $selector, $price);
 
         $this->assertTrue($product->code()->equals($code));
         $this->assertTrue($product->selector()->equals($selector));
@@ -46,10 +46,22 @@ final class ProductTest extends TestCase
         $this->expectException(InvalidProductPrice::class);
         $this->expectExceptionMessageIs('Product price must be positive.');
 
-        new Product(
+        Product::create(
             ProductCode::fromValue('SODA'),
             ProductSelector::fromValue('GET-SODA'),
             Money::fromMinor(0),
+        );
+    }
+
+    public function testRejectsPriceNotDivisibleBySmallestCoin(): void
+    {
+        $this->expectException(InvalidProductPrice::class);
+        $this->expectExceptionMessageIs('Product price must be divisible by the smallest coin denomination.');
+
+        Product::create(
+            ProductCode::fromValue('SODA'),
+            ProductSelector::fromValue('GET-SODA'),
+            Money::fromMinor(37),
         );
     }
 
@@ -58,7 +70,7 @@ final class ProductTest extends TestCase
         $this->expectException(MismatchedProductSelector::class);
         $this->expectExceptionMessageIs('Product selector must match the product code.');
 
-        new Product(
+        Product::create(
             ProductCode::fromValue('SODA'),
             ProductSelector::fromValue('GET-WATER'),
             Money::fromMinor(150),

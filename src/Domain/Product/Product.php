@@ -4,24 +4,37 @@ declare(strict_types=1);
 
 namespace Src\Domain\Product;
 
+use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Money\Money;
 use Src\Domain\Product\Exceptions\InvalidProductPrice;
 use Src\Domain\Product\Exceptions\MismatchedProductSelector;
 
 final readonly class Product
 {
-    public function __construct(
+    private function __construct(
         private ProductCode $code,
         private ProductSelector $selector,
         private Money $price,
     ) {
         if ($this->price->amountMinor() <= 0) {
-            throw new InvalidProductPrice();
+            throw InvalidProductPrice::notPositive();
+        }
+
+        if ($this->price->amountMinor() % CoinDenomination::smallest()->value !== 0) {
+            throw InvalidProductPrice::notDivisibleBySmallestCoin();
         }
 
         if (!$this->selector->matches($this->code)) {
             throw new MismatchedProductSelector();
         }
+    }
+
+    public static function create(
+        ProductCode $code,
+        ProductSelector $selector,
+        Money $price,
+    ): self {
+        return new self($code, $selector, $price);
     }
 
     public function code(): ProductCode

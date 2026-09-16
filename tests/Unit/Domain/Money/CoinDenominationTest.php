@@ -23,6 +23,11 @@ final class CoinDenominationTest extends TestCase
         $this->assertTrue($denomination->money()->equals(Money::fromMinor($expectedMinor)));
     }
 
+    public function testSmallestDenominationIsFiveCents(): void
+    {
+        $this->assertSame(CoinDenomination::FIVE_CENTS, CoinDenomination::smallest());
+    }
+
     /**
      * @return array<string, array{CoinDenomination, int}>
      */
