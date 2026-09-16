@@ -64,6 +64,17 @@ final readonly class ProductSlotCollection
         throw new ProductSlotNotFound();
     }
 
+    public function contains(ProductCode $code): bool
+    {
+        foreach ($this->slots as $slot) {
+            if ($slot->product()->code()->equals($code)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function slotFor(ProductSelector $selector): ProductSlot
     {
         $slot = $this->slots[$selector->value()] ?? null;

@@ -8,13 +8,12 @@ use PHPUnit\Framework\TestCase;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Money\Money;
-use Src\Domain\Product\Exceptions\ProductSlotNotFound;
 use Src\Domain\Product\Product;
 use Src\Domain\Product\ProductCode;
 use Src\Domain\Product\ProductSelector;
 use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
-use Src\Domain\VendingMachine\Exceptions\CannotServiceDuringTransaction;
+use Src\Domain\VendingMachine\ServiceResult;
 use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Domain\VendingMachine\VendingMachine;
 
@@ -82,7 +81,7 @@ final class VendingMachineTest extends TestCase
     {
         $machine = $this->machine();
 
-        $resultMachine = $machine->service(
+        $outcome = $machine->service(
             ServiceSnapshot::create(
                 CoinCollection::empty()
                     ->add(CoinDenomination::FIVE_CENTS, 1)
@@ -94,6 +93,10 @@ final class VendingMachineTest extends TestCase
                 ->withQuantity(ProductCode::fromValue('JUICE'), 41)
                 ->withQuantity(ProductCode::fromValue('SODA'), 12),
         );
+
+        $resultMachine = $outcome->vendingMachine();
+
+        $this->assertSame(ServiceResult::SERVICED, $outcome->result());
 
         $this->assertSame(5, $machine->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
         $this->assertSame(5, $machine->productSlots()->slotFor(ProductSelector::fromValue('GET-JUICE'))->quantity());
@@ -114,10 +117,14 @@ final class VendingMachineTest extends TestCase
 
     public function testServiceCanRestockASubsetOfProducts(): void
     {
-        $resultMachine = $this->machine()->service(
+        $outcome = $this->machine()->service(
             ServiceSnapshot::create($this->availableChange())
                 ->withQuantity(ProductCode::fromValue('WATER'), 33),
         );
+
+        $resultMachine = $outcome->vendingMachine();
+
+        $this->assertSame(ServiceResult::SERVICED, $outcome->result());
 
         $this->assertSame(33, $resultMachine->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
         $this->assertSame(5, $resultMachine->productSlots()->slotFor(ProductSelector::fromValue('GET-JUICE'))->quantity());
@@ -126,26 +133,30 @@ final class VendingMachineTest extends TestCase
 
     public function testServiceCannotAddAnUnknownProduct(): void
     {
-        $this->expectException(ProductSlotNotFound::class);
-        $this->expectExceptionMessageIs('No matching product slot was found.');
+        $machine = $this->machine();
 
-        $this->machine()->service(
+        $outcome = $machine->service(
             ServiceSnapshot::create($this->availableChange())
                 ->withQuantity(ProductCode::fromValue('TEA'), 10),
         );
+
+        $this->assertSame(ServiceResult::CATALOG_MISMATCH, $outcome->result());
+        $this->assertSame($machine, $outcome->vendingMachine());
     }
 
     public function testCannotServiceWhileCoinsAreInserted(): void
     {
-        $this->expectException(CannotServiceDuringTransaction::class);
-        $this->expectExceptionMessageIs('Cannot service the vending machine while coins are inserted.');
+        $machine = $this->machine()->insertCoin(CoinDenomination::TEN_CENTS);
 
-        $this->machine()
-            ->insertCoin(CoinDenomination::TEN_CENTS)
-            ->service(
-                ServiceSnapshot::create($this->availableChange())
-                    ->withQuantity(ProductCode::fromValue('WATER'), 33),
-            );
+        $outcome = $machine->service(
+            ServiceSnapshot::create($this->availableChange())
+                ->withQuantity(ProductCode::fromValue('WATER'), 33),
+        );
+
+        $this->assertSame(ServiceResult::ACTIVE_CUSTOMER_SESSION, $outcome->result());
+        $this->assertSame($machine, $outcome->vendingMachine());
+        $this->assertSame(1, $outcome->vendingMachine()->insertedCoins()->quantityOf(CoinDenomination::TEN_CENTS));
+        $this->assertSame(5, $outcome->vendingMachine()->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
     }
 
     private function machine(): VendingMachine

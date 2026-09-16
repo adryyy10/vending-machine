@@ -18,8 +18,7 @@ final readonly class ServiceSnapshot
     private function __construct(
         private CoinCollection $availableChange,
         private array $quantities,
-    ) {
-    }
+    ) {}
 
     public static function create(CoinCollection $availableChange): self
     {
@@ -47,6 +46,17 @@ final readonly class ServiceSnapshot
     public function availableChange(): CoinCollection
     {
         return $this->availableChange;
+    }
+
+    public function matchesCatalog(ProductSlotCollection $slots): bool
+    {
+        foreach (array_keys($this->quantities) as $code) {
+            if (!$slots->contains(ProductCode::fromValue($code))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function restock(ProductSlotCollection $slots): ProductSlotCollection
