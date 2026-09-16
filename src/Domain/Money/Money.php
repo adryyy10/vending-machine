@@ -8,7 +8,7 @@ use Src\Domain\Money\Exceptions\NegativeMoneyNotAllowed;
 
 final readonly class Money
 {
-    private function __construct(private int $amountMinor)
+    private function __construct(private readonly int $amountMinor)
     {
         if ($this->amountMinor < 0) {
             throw new NegativeMoneyNotAllowed();
