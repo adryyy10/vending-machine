@@ -13,6 +13,8 @@ use Src\Domain\Product\ProductCode;
 use Src\Domain\Product\ProductSelector;
 use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
+use Src\Domain\Product\PurchaseRejected;
+use Src\Domain\Product\PurchaseRejectionReason;
 use Src\Domain\VendingMachine\ServiceResult;
 use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Domain\VendingMachine\VendingMachine;
@@ -197,6 +199,71 @@ final class VendingMachineTest extends TestCase
         $this->assertSame(4, $updated->availableChange()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));
         $this->assertSame(9, $updated->availableChange()->quantityOf(CoinDenomination::TEN_CENTS));
         $this->assertSame(25, $updated->availableChange()->quantityOf(CoinDenomination::FIVE_CENTS));
+    }
+
+    public function testSelectUnknownProductIsRejected(): void
+    {
+        $machine = $this->machine()->insertCoin(CoinDenomination::ONE_HUNDRED_CENTS);
+
+        $rejected = $machine->select(ProductSelector::fromValue('GET-TEA'));
+
+        $this->assertInstanceOf(PurchaseRejected::class, $rejected);
+        $this->assertSame(PurchaseRejectionReason::UNKNOWN_SELECTION, $rejected->reason());
+        $this->assertSame($machine, $rejected->vendingMachine());
+        $this->assertSame(1, $rejected->vendingMachine()->insertedCoins()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+    }
+
+    public function testSelectOutOfStockProductIsRejected(): void
+    {
+        $machine = VendingMachine::create(
+            $this->availableChange(),
+            ProductSlotCollection::fromSlots(
+                $this->slot('WATER', 65, 0),
+                $this->slot('JUICE', 100, 5),
+                $this->slot('SODA', 150, 5),
+            ),
+        )->insertCoin(CoinDenomination::ONE_HUNDRED_CENTS);
+
+        $rejected = $machine->select(ProductSelector::fromValue('GET-WATER'));
+
+        $this->assertInstanceOf(PurchaseRejected::class, $rejected);
+        $this->assertSame(PurchaseRejectionReason::OUT_OF_STOCK, $rejected->reason());
+        $this->assertSame($machine, $rejected->vendingMachine());
+        $this->assertSame(0, $rejected->vendingMachine()->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+        $this->assertSame(1, $rejected->vendingMachine()->insertedCoins()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+    }
+
+    public function testSelectWithInsufficientFundsIsRejected(): void
+    {
+        $machine = $this->machine()->insertCoin(CoinDenomination::TEN_CENTS);
+
+        $rejected = $machine->select(ProductSelector::fromValue('GET-WATER'));
+
+        $this->assertInstanceOf(PurchaseRejected::class, $rejected);
+        $this->assertSame(PurchaseRejectionReason::INSUFFICIENT_FUNDS, $rejected->reason());
+        $this->assertSame($machine, $rejected->vendingMachine());
+        $this->assertSame(1, $rejected->vendingMachine()->insertedCoins()->quantityOf(CoinDenomination::TEN_CENTS));
+        $this->assertSame(5, $rejected->vendingMachine()->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+    }
+
+    public function testSelectWhenExactChangeIsUnavailableIsRejected(): void
+    {
+        $machine = VendingMachine::create(
+            CoinCollection::empty(),
+            ProductSlotCollection::fromSlots(
+                $this->slot('WATER', 65, 5),
+                $this->slot('JUICE', 100, 5),
+                $this->slot('SODA', 150, 5),
+            ),
+        )->insertCoin(CoinDenomination::ONE_HUNDRED_CENTS);
+
+        $rejected = $machine->select(ProductSelector::fromValue('GET-WATER'));
+
+        $this->assertInstanceOf(PurchaseRejected::class, $rejected);
+        $this->assertSame(PurchaseRejectionReason::EXACT_CHANGE_UNAVAILABLE, $rejected->reason());
+        $this->assertSame($machine, $rejected->vendingMachine());
+        $this->assertSame(1, $rejected->vendingMachine()->insertedCoins()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+        $this->assertSame(5, $rejected->vendingMachine()->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
     }
 
     private function machine(): VendingMachine

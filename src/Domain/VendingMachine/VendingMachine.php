@@ -9,8 +9,11 @@ use Src\Domain\Change\ChangeCalculator;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Product\ProductSelector;
+use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
 use Src\Domain\Product\ProductVended;
+use Src\Domain\Product\PurchaseRejected;
+use Src\Domain\Product\PurchaseRejectionReason;
 
 final readonly class VendingMachine
 {
@@ -78,12 +81,31 @@ final readonly class VendingMachine
         return new ServiceOutcome($serviced, ServiceResult::SERVICED);
     }
 
-    public function select(ProductSelector $productSelector): ProductVended
+    public function select(ProductSelector $productSelector): ProductVended|PurchaseRejected
     {
-        $product = $this->productSlots->slotFor($productSelector)->product();
-        $changeDue = $this->insertedCoins->total()->subtract($product->price());
+        $slot = $this->productSlots->find($productSelector);
+
+        if (!$slot instanceof ProductSlot) {
+            return new PurchaseRejected($this, PurchaseRejectionReason::UNKNOWN_SELECTION);
+        }
+
+        if (!$slot->hasStock()) {
+            return new PurchaseRejected($this, PurchaseRejectionReason::OUT_OF_STOCK);
+        }
+
+        $product = $slot->product();
+
+        if ($this->insertedCoins->total()->lessThan($product->price())) {
+            return new PurchaseRejected($this, PurchaseRejectionReason::INSUFFICIENT_FUNDS);
+        }
+
+        $changeAmount = $this->insertedCoins->total()->subtract($product->price());
         $hopper = $this->availableChange->merge($this->insertedCoins);
-        $change = $this->changeCalculator->calculate($changeDue, $hopper);
+        $change = $this->changeCalculator->calculate($changeAmount, $hopper);
+
+        if (!$change instanceof CoinCollection) {
+            return new PurchaseRejected($this, PurchaseRejectionReason::EXACT_CHANGE_UNAVAILABLE);
+        }
 
         $vendingMachine = new self(
             $hopper->subtract($change),

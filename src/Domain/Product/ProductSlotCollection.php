@@ -75,9 +75,14 @@ final readonly class ProductSlotCollection
         return false;
     }
 
+    public function find(ProductSelector $selector): ?ProductSlot
+    {
+        return $this->slots[$selector->value()] ?? null;
+    }
+
     public function slotFor(ProductSelector $selector): ProductSlot
     {
-        $slot = $this->slots[$selector->value()] ?? null;
+        $slot = $this->find($selector);
 
         if (!$slot instanceof ProductSlot) {
             throw new ProductSlotNotFound();
