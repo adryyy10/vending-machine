@@ -10,6 +10,6 @@ final class ProductSlotNotFound extends DomainException
 {
     public function __construct()
     {
-        parent::__construct('No product slot matches the given selector.');
+        parent::__construct('No matching product slot was found.');
     }
 }

@@ -65,10 +65,34 @@ final class ProductSlotCollectionTest extends TestCase
     public function testSlotForUnknownSelectorThrows(): void
     {
         $this->expectException(ProductSlotNotFound::class);
-        $this->expectExceptionMessageIs('No product slot matches the given selector.');
+        $this->expectExceptionMessageIs('No matching product slot was found.');
 
         ProductSlotCollection::fromSlots($this->slot('WATER', 65, 5))
             ->slotFor(ProductSelector::fromValue('GET-SODA'));
+    }
+
+    public function testReplaceQuantityKeepsTheProductAndPrice(): void
+    {
+        $water = $this->slot('WATER', 65, 5);
+        $juice = $this->slot('JUICE', 100, 5);
+        $collection = ProductSlotCollection::fromSlots($water, $juice);
+
+        $restocked = $collection->replaceQuantity(ProductCode::fromValue('WATER'), 33);
+
+        $this->assertSame(5, $collection->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+        $this->assertSame(33, $restocked->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+        $this->assertSame(5, $restocked->slotFor(ProductSelector::fromValue('GET-JUICE'))->quantity());
+        $this->assertSame($water->product(), $restocked->slotFor(ProductSelector::fromValue('GET-WATER'))->product());
+        $this->assertTrue($restocked->slotFor(ProductSelector::fromValue('GET-WATER'))->product()->price()->equals(Money::fromMinor(65)));
+    }
+
+    public function testReplaceQuantityForUnknownProductThrows(): void
+    {
+        $this->expectException(ProductSlotNotFound::class);
+        $this->expectExceptionMessageIs('No matching product slot was found.');
+
+        ProductSlotCollection::fromSlots($this->slot('WATER', 65, 5))
+            ->replaceQuantity(ProductCode::fromValue('SODA'), 10);
     }
 
     private function slot(string $code, int $priceMinor, int $quantity): ProductSlot

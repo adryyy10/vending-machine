@@ -12,9 +12,7 @@ final readonly class ProductSlotCollection
     /**
      * @param array<string, ProductSlot> $slots keyed by selector value
      */
-    private function __construct(private array $slots)
-    {
-    }
+    private function __construct(private array $slots) {}
 
     public static function empty(): self
     {
@@ -50,6 +48,20 @@ final readonly class ProductSlotCollection
         $slots[$slot->product()->selector()->value()] = $slot;
 
         return new self($slots);
+    }
+
+    public function replaceQuantity(ProductCode $code, int $quantity): self
+    {
+        foreach ($this->slots as $slot) {
+            if ($slot->product()->code()->equals($code)) {
+                $slots = $this->slots;
+                $slots[$slot->product()->selector()->value()] = $slot->replaceWithQuantity($quantity);
+
+                return new self($slots);
+            }
+        }
+
+        throw new ProductSlotNotFound();
     }
 
     public function slotFor(ProductSelector $selector): ProductSlot

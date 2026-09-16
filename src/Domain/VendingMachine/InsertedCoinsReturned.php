@@ -11,8 +11,7 @@ final readonly class InsertedCoinsReturned
     public function __construct(
         private VendingMachine $vendingMachine,
         private CoinCollection $coins,
-    ) {
-    }
+    ) {}
 
     public function vendingMachine(): VendingMachine
     {

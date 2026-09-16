@@ -23,7 +23,7 @@ enum CoinDenomination: int
         $smallest = self::cases()[0];
 
         foreach (self::cases() as $coin) {
-            if ($coin->value < $smallest->value) {
+            if ($coin->value <= $smallest->value) {
                 $smallest = $coin;
             }
         }

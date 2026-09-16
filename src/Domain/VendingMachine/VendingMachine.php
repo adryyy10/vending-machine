@@ -7,6 +7,7 @@ namespace Src\Domain\VendingMachine;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Product\ProductSlotCollection;
+use Src\Domain\VendingMachine\Exceptions\CannotServiceDuringTransaction;
 
 final readonly class VendingMachine
 {
@@ -14,8 +15,7 @@ final readonly class VendingMachine
         private CoinCollection $availableChange,
         private CoinCollection $insertedCoins,
         private ProductSlotCollection $productSlots,
-    ) {
-    }
+    ) {}
 
     public static function create(
         CoinCollection $availableChange,
@@ -38,6 +38,21 @@ final readonly class VendingMachine
         return new InsertedCoinsReturned(
             new self($this->availableChange, CoinCollection::empty(), $this->productSlots),
             $this->insertedCoins,
+        );
+    }
+
+    public function service(ServiceSnapshot $serviceSnapshot): self
+    {
+        if (!$this->insertedCoins->isEmpty()) {
+            throw new CannotServiceDuringTransaction();
+        }
+
+        $productSlots = $serviceSnapshot->restock($this->productSlots);
+
+        return new self(
+            $serviceSnapshot->availableChange(),
+            $this->insertedCoins,
+            $productSlots,
         );
     }
 
