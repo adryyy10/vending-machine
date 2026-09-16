@@ -165,7 +165,7 @@ final class CoinCollectionTest extends TestCase
     /**
      * @return array<string, array{int}>
      */
-        public static function nonPositiveQuantityProvider(): array
+    public static function nonPositiveQuantityProvider(): array
     {
         return [
             'zero' => [0],

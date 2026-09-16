@@ -13,9 +13,7 @@ final readonly class CoinCollection
     /**
      * @param array<int, int> $quantities denomination minor units => quantity
      */
-    private function __construct(private array $quantities)
-    {
-    }
+    private function __construct(private array $quantities) {}
 
     public static function empty(): self
     {

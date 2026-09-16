@@ -1,2 +1,7 @@
 /vendor
 README_TEST.md
+.phpunit.cache/test-run-history
+
+# PHP CS Fixer configuration
+/.php-cs-fixer.cache
+/.php-cs-fixer.php
