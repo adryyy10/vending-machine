@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Src\Domain\VendingMachine;
 
 use Src\Domain\Money\CoinCollection;
+use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Product\ProductSlotCollection;
 
 final readonly class VendingMachine
@@ -21,6 +22,23 @@ final readonly class VendingMachine
         ProductSlotCollection $productSlots,
     ): self {
         return new self($availableChange, CoinCollection::empty(), $productSlots);
+    }
+
+    public function insertCoin(CoinDenomination $coin): self
+    {
+        return new self(
+            $this->availableChange,
+            $this->insertedCoins->add($coin),
+            $this->productSlots,
+        );
+    }
+
+    public function returnInsertedCoins(): InsertedCoinsReturned
+    {
+        return new InsertedCoinsReturned(
+            new self($this->availableChange, CoinCollection::empty(), $this->productSlots),
+            $this->insertedCoins,
+        );
     }
 
     public function insertedCoins(): CoinCollection

@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Money\Money;
-use Src\Domain\Product\Exceptions\DuplicateProductSlot;
 use Src\Domain\Product\Product;
 use Src\Domain\Product\ProductCode;
 use Src\Domain\Product\ProductSelector;
@@ -37,6 +36,55 @@ final class VendingMachineTest extends TestCase
         $this->assertSame($water, $slots->slotFor(ProductSelector::fromValue('GET-WATER')));
         $this->assertSame($juice, $slots->slotFor(ProductSelector::fromValue('GET-JUICE')));
         $this->assertSame($soda, $slots->slotFor(ProductSelector::fromValue('GET-SODA')));
+    }
+
+    public function testInsertCoinAddsToInsertedCoinsWithoutTouchingTheHopper(): void
+    {
+        $machine = $this->machine();
+
+        $updated = $machine->insertCoin(CoinDenomination::TWENTY_FIVE_CENTS);
+
+        $this->assertTrue($machine->insertedCoins()->isEmpty());
+        $this->assertSame(1, $updated->insertedCoins()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));
+        $this->assertSame($machine->availableChange(), $updated->availableChange());
+    }
+
+    public function testReturnInsertedCoinsGivesBackTheSameCoinsAndClearsTheSlot(): void
+    {
+        $machine = $this->machine()
+            ->insertCoin(CoinDenomination::TEN_CENTS)
+            ->insertCoin(CoinDenomination::TEN_CENTS);
+
+        $result = $machine->returnInsertedCoins();
+
+        $this->assertSame(2, $result->coins()->quantityOf(CoinDenomination::TEN_CENTS));
+        $this->assertTrue($result->coins()->total()->equals(Money::fromMinor(20)));
+        $this->assertTrue($result->vendingMachine()->insertedCoins()->isEmpty());
+        $this->assertSame($machine->availableChange(), $result->vendingMachine()->availableChange());
+        $this->assertSame($machine->productSlots(), $result->vendingMachine()->productSlots());
+        $this->assertSame(2, $machine->insertedCoins()->quantityOf(CoinDenomination::TEN_CENTS));
+    }
+
+    public function testReturnInsertedCoinsWhenNothingWasInsertedReturnsEmpty(): void
+    {
+        $machine = $this->machine();
+
+        $result = $machine->returnInsertedCoins();
+
+        $this->assertTrue($result->coins()->isEmpty());
+        $this->assertTrue($result->vendingMachine()->insertedCoins()->isEmpty());
+    }
+
+    private function machine(): VendingMachine
+    {
+        return VendingMachine::create(
+            $this->availableChange(),
+            ProductSlotCollection::fromSlots(
+                $this->slot('WATER', 65, 5),
+                $this->slot('JUICE', 100, 5),
+                $this->slot('SODA', 150, 5),
+            ),
+        );
     }
 
     private function availableChange(): CoinCollection

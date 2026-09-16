@@ -13,6 +13,11 @@ enum CoinDenomination: int
     case TWENTY_FIVE_CENTS = 25;
     case ONE_HUNDRED_CENTS = 100;
 
+    public function money(): Money
+    {
+        return Money::fromMinor($this->value);
+    }
+
     public static function smallest(): self
     {
         $smallest = self::cases()[0];
@@ -24,10 +29,5 @@ enum CoinDenomination: int
         }
 
         return $smallest;
-    }
-
-    public function money(): Money
-    {
-        return Money::fromMinor($this->value);
     }
 }
