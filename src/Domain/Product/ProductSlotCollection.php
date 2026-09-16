@@ -86,6 +86,14 @@ final readonly class ProductSlotCollection
         return $slot;
     }
 
+    public function decrement(ProductSelector $selector): self
+    {
+        $slots = $this->slots;
+        $slots[$selector->value()] = $this->slotFor($selector)->decrement();
+
+        return new self($slots);
+    }
+
     /**
      * @return list<ProductSlot>
      */

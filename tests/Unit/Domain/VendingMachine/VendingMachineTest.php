@@ -159,6 +159,46 @@ final class VendingMachineTest extends TestCase
         $this->assertSame(5, $outcome->vendingMachine()->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
     }
 
+    public function testSelectSodaWithExactChange(): void
+    {
+        $machine = $this->machine()
+            ->insertCoin(CoinDenomination::ONE_HUNDRED_CENTS)
+            ->insertCoin(CoinDenomination::TWENTY_FIVE_CENTS)
+            ->insertCoin(CoinDenomination::TWENTY_FIVE_CENTS);
+
+        $vended = $machine->select(ProductSelector::fromValue('GET-SODA'));
+        $updated = $vended->vendingMachine();
+
+        $this->assertTrue($vended->product()->code()->equals(ProductCode::fromValue('SODA')));
+        $this->assertTrue($vended->change()->isEmpty());
+        $this->assertTrue($updated->insertedCoins()->isEmpty());
+        $this->assertSame(4, $updated->productSlots()->slotFor(ProductSelector::fromValue('GET-SODA'))->quantity());
+        $this->assertSame(5, $machine->productSlots()->slotFor(ProductSelector::fromValue('GET-SODA'))->quantity());
+        $this->assertSame(3, $updated->availableChange()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+        $this->assertSame(7, $updated->availableChange()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));
+    }
+
+    public function testSelectWaterAndReturnsChange(): void
+    {
+        $machine = $this->machine()->insertCoin(CoinDenomination::ONE_HUNDRED_CENTS);
+
+        $vended = $machine->select(ProductSelector::fromValue('GET-WATER'));
+        $updated = $vended->vendingMachine();
+
+        $this->assertTrue($vended->product()->code()->equals(ProductCode::fromValue('WATER')));
+        $this->assertTrue($vended->change()->total()->equals(Money::fromMinor(35)));
+        $this->assertSame(1, $vended->change()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));
+        $this->assertSame(1, $vended->change()->quantityOf(CoinDenomination::TEN_CENTS));
+        $this->assertTrue($updated->insertedCoins()->isEmpty());
+        $this->assertSame(4, $updated->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+        $this->assertSame(5, $machine->productSlots()->slotFor(ProductSelector::fromValue('GET-WATER'))->quantity());
+        $this->assertSame(1, $machine->insertedCoins()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+        $this->assertSame(3, $updated->availableChange()->quantityOf(CoinDenomination::ONE_HUNDRED_CENTS));
+        $this->assertSame(4, $updated->availableChange()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));
+        $this->assertSame(9, $updated->availableChange()->quantityOf(CoinDenomination::TEN_CENTS));
+        $this->assertSame(25, $updated->availableChange()->quantityOf(CoinDenomination::FIVE_CENTS));
+    }
+
     private function machine(): VendingMachine
     {
         return VendingMachine::create(
