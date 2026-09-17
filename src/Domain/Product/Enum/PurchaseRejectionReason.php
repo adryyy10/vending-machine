@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Src\Domain\Product;
+namespace Src\Domain\Product\Enum;
 
 enum PurchaseRejectionReason
 {

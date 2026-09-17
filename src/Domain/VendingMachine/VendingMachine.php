@@ -13,7 +13,8 @@ use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
 use Src\Domain\Product\ProductVended;
 use Src\Domain\Product\PurchaseRejected;
-use Src\Domain\Product\PurchaseRejectionReason;
+use Src\Domain\Product\Enum\PurchaseRejectionReason;
+use Src\Domain\VendingMachine\Enum\ServiceResult;
 
 final readonly class VendingMachine
 {

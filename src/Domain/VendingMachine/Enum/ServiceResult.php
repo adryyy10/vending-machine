@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Src\Domain\VendingMachine;
+namespace Src\Domain\VendingMachine\Enum;
 
 enum ServiceResult
 {

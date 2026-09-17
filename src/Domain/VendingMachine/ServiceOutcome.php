@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Src\Domain\VendingMachine;
 
+use Src\Domain\VendingMachine\Enum\ServiceResult;
+
 final readonly class ServiceOutcome
 {
     public function __construct(
