@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    image: vending-machine:local
+    stdin_open: true
+    tty: true
+
+  test:
+    build: .
+    image: vending-machine:local
+    profiles: ["test"]
+    command: ["vendor/bin/phpunit", "--colors=always"]
