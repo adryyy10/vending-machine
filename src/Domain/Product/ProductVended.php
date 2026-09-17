@@ -13,8 +13,7 @@ final readonly class ProductVended
         private VendingMachine $vendingMachine,
         private Product $product,
         private CoinCollection $change,
-    ) {
-    }
+    ) {}
 
     public function vendingMachine(): VendingMachine
     {

@@ -7,8 +7,8 @@ namespace Src\Application;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Product\ProductSelector;
 use Src\Domain\Product\PurchaseRejected;
-use Src\Domain\Product\PurchaseRejectionReason;
-use Src\Domain\VendingMachine\ServiceResult;
+use Src\Domain\Product\Enum\PurchaseRejectionReason;
+use Src\Domain\VendingMachine\Enum\ServiceResult;
 use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Domain\VendingMachine\VendingMachine;
 
@@ -16,8 +16,7 @@ final class VendingMachineSession
 {
     public function __construct(
         private VendingMachine $machine,
-    ) {
-    }
+    ) {}
 
     public function insertCoin(CoinDenomination $coin): ActionResult
     {

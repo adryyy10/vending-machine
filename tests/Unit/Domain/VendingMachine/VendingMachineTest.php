@@ -15,6 +15,7 @@ use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
 use Src\Domain\Product\PurchaseRejected;
 use Src\Domain\Product\Enum\PurchaseRejectionReason;
+use Src\Domain\Product\ProductVended;
 use Src\Domain\VendingMachine\Enum\ServiceResult;
 use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Domain\VendingMachine\VendingMachine;
@@ -171,6 +172,7 @@ final class VendingMachineTest extends TestCase
         $vended = $machine->select(ProductSelector::fromValue('GET-SODA'));
         $updated = $vended->vendingMachine();
 
+        $this->assertInstanceOf(ProductVended::class, $vended);
         $this->assertTrue($vended->product()->code()->equals(ProductCode::fromValue('SODA')));
         $this->assertTrue($vended->change()->isEmpty());
         $this->assertTrue($updated->insertedCoins()->isEmpty());
@@ -199,6 +201,7 @@ final class VendingMachineTest extends TestCase
         $vended = $insertedCoinsMachine->select(ProductSelector::fromValue('GET-SODA'));
         $updated = $vended->vendingMachine();
 
+        $this->assertInstanceOf(ProductVended::class, $vended);
         $this->assertTrue($vended->product()->code()->equals(ProductCode::fromValue('SODA')));
         $this->assertTrue($vended->change()->isEmpty());
         $this->assertTrue($updated->insertedCoins()->isEmpty());
@@ -215,6 +218,7 @@ final class VendingMachineTest extends TestCase
         $vended = $machine->select(ProductSelector::fromValue('GET-WATER'));
         $updated = $vended->vendingMachine();
 
+        $this->assertInstanceOf(ProductVended::class, $vended);
         $this->assertTrue($vended->product()->code()->equals(ProductCode::fromValue('WATER')));
         $this->assertTrue($vended->change()->total()->equals(Money::fromMinor(35)));
         $this->assertSame(1, $vended->change()->quantityOf(CoinDenomination::TWENTY_FIVE_CENTS));

@@ -12,8 +12,7 @@ final readonly class PurchaseRejected
     public function __construct(
         private VendingMachine $vendingMachine,
         private PurchaseRejectionReason $reason,
-    ) {
-    }
+    ) {}
 
     public function vendingMachine(): VendingMachine
     {

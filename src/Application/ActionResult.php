@@ -17,8 +17,7 @@ final readonly class ActionResult
         private ActionStatus $status,
         private array $outputs,
         private ?RejectionReason $rejectionReason = null,
-    ) {
-    }
+    ) {}
 
     public static function coinAccepted(): self
     {
@@ -74,7 +73,7 @@ final readonly class ActionResult
         $denominations = CoinDenomination::cases();
         usort(
             $denominations,
-            static fn (CoinDenomination $left, CoinDenomination $right): int => $right->value <=> $left->value,
+            static fn(CoinDenomination $left, CoinDenomination $right): int => $right->value <=> $left->value,
         );
 
         $outputs = [];

@@ -23,8 +23,7 @@ final readonly class VendingMachine
         private CoinCollection $insertedCoins,
         private ProductSlotCollection $productSlots,
         private ChangeCalculator $changeCalculator,
-    ) {
-    }
+    ) {}
 
     public static function create(
         CoinCollection $availableChange,

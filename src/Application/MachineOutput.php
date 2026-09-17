@@ -12,8 +12,7 @@ final readonly class MachineOutput
     private function __construct(
         private ?ProductCode $productCode,
         private ?CoinDenomination $coin,
-    ) {
-    }
+    ) {}
 
     public static function product(ProductCode $productCode): self
     {
