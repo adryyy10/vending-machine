@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Src\Application\ActionStatus;
 use Src\Application\RejectionReason;
 use Src\Application\VendingMachineSession;
-use Src\Domain\Change\BacktrackingChangeCalculator;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Money\Money;

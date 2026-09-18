@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Src\Domain\VendingMachine;
 
-use Src\Domain\Change\BacktrackingChangeCalculator;
 use Src\Domain\Change\ChangeCalculator;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
@@ -28,13 +27,12 @@ final readonly class VendingMachine
     public static function create(
         CoinCollection $availableChange,
         ProductSlotCollection $productSlots,
-        ?ChangeCalculator $changeCalculator = null,
     ): self {
         return new self(
             $availableChange,
             CoinCollection::empty(),
             $productSlots,
-            $changeCalculator ?? BacktrackingChangeCalculator::create(),
+            ChangeCalculator::create(),
         );
     }
 

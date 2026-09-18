@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Tests\Unit\Domain\Change;
 
 use PHPUnit\Framework\TestCase;
-use Src\Domain\Change\BacktrackingChangeCalculator;
+use Src\Domain\Change\ChangeCalculator;
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
 use Src\Domain\Money\Money;
 
-final class BacktrackingChangeCalculatorTest extends TestCase
+final class ChangeCalculatorTest extends TestCase
 {
     public function testZeroAmountReturnsEmptyChange(): void
     {
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(0),
             CoinCollection::empty()->add(CoinDenomination::TEN_CENTS, 5),
         );
@@ -25,7 +25,7 @@ final class BacktrackingChangeCalculatorTest extends TestCase
 
     public function testMakesWaterChangeAsQuarterAndDime(): void
     {
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(35),
             $this->hopper(),
         );
@@ -40,7 +40,7 @@ final class BacktrackingChangeCalculatorTest extends TestCase
 
     public function testPrefersLargerDenominations(): void
     {
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(100),
             CoinCollection::empty()
                 ->add(CoinDenomination::ONE_HUNDRED_CENTS)
@@ -58,7 +58,7 @@ final class BacktrackingChangeCalculatorTest extends TestCase
             ->add(CoinDenomination::TWENTY_FIVE_CENTS)
             ->add(CoinDenomination::TEN_CENTS, 3);
 
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(30),
             $hopper,
         );
@@ -71,7 +71,7 @@ final class BacktrackingChangeCalculatorTest extends TestCase
 
     public function testDoesNotUseMoreCoinsThanAvailable(): void
     {
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(20),
             CoinCollection::empty()->add(CoinDenomination::TEN_CENTS),
         );
@@ -81,7 +81,7 @@ final class BacktrackingChangeCalculatorTest extends TestCase
 
     public function testReturnsNullWhenAmountCannotBeMade(): void
     {
-        $change = BacktrackingChangeCalculator::create()->calculate(
+        $change = ChangeCalculator::create()->calculate(
             Money::fromMinor(10),
             CoinCollection::empty()->add(CoinDenomination::TWENTY_FIVE_CENTS),
         );
