@@ -42,7 +42,7 @@ final class CliApplicationTest extends TestCase
     {
         $session = new VendingMachineSession(StandardCatalog::machine());
         $formatter = new OutputFormatter();
-        $application = new CliApplication($session, new ActionParser(), $formatter, new ServicePrompter($formatter), new UsageGuide($formatter));
+        $application = new CliApplication($session, new ActionParser(), $formatter, new ServicePrompter($formatter, StandardCatalog::productSlots()), new UsageGuide($formatter));
 
         $application->run(
             $this->input("SERVICE\n3\n7\n7\n3\n5\n8\n2\n"),

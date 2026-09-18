@@ -24,12 +24,13 @@ final class CliApplication
     public static function create(): self
     {
         $formatter = new OutputFormatter();
+        $standardCatalog = StandardCatalog::machine();
 
         return new self(
-            new VendingMachineSession(StandardCatalog::machine()),
+            new VendingMachineSession($standardCatalog),
             new ActionParser(),
             $formatter,
-            new ServicePrompter($formatter),
+            new ServicePrompter($formatter, $standardCatalog->productSlots()),
             new UsageGuide($formatter),
         );
     }

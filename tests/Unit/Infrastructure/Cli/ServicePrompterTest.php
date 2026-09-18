@@ -75,7 +75,7 @@ final class ServicePrompterTest extends TestCase
 
     private function prompter(): ServicePrompter
     {
-        return new ServicePrompter(new OutputFormatter());
+        return new ServicePrompter(new OutputFormatter(), StandardCatalog::productSlots());
     }
 
     /**

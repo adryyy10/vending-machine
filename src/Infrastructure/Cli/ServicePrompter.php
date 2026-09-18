@@ -6,12 +6,13 @@ namespace Src\Infrastructure\Cli;
 
 use Src\Domain\Money\CoinCollection;
 use Src\Domain\Money\Enum\CoinDenomination;
+use Src\Domain\Product\ProductSlotCollection;
 use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Infrastructure\Cli\Exceptions\IncompleteServiceInput;
 
 final class ServicePrompter
 {
-    public function __construct(private OutputFormatter $formatter) {}
+    public function __construct(private OutputFormatter $formatter, private ProductSlotCollection $productSlots) {}
 
     /**
      * @param resource $input
@@ -35,7 +36,7 @@ final class ServicePrompter
 
         $snapshot = ServiceSnapshot::create($hopper);
 
-        foreach (StandardCatalog::productSlots()->all() as $slot) {
+        foreach ($this->productSlots->all() as $slot) {
             $snapshot = $snapshot->withQuantity(
                 $slot->product()->code(),
                 $this->ask(
