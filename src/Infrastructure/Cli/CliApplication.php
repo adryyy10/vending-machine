@@ -6,7 +6,9 @@ namespace Src\Infrastructure\Cli;
 
 use Src\Application\ActionResult;
 use Src\Application\VendingMachineSession;
+use Src\Domain\Money\CoinCollection;
 use Src\Domain\VendingMachine\ServiceSnapshot;
+use Src\Infrastructure\Cli\Exceptions\InteractiveServiceRequired;
 use Src\Infrastructure\Cli\Exceptions\UnrecognizedAction;
 
 final class CliApplication
@@ -15,16 +17,20 @@ final class CliApplication
         private VendingMachineSession $session,
         private ActionParser $parser,
         private OutputFormatter $formatter,
-        private ServiceSnapshot $serviceSnapshot,
+        private ServicePrompter $prompter,
+        private UsageGuide $usageGuide,
     ) {}
 
     public static function create(): self
     {
+        $formatter = new OutputFormatter();
+
         return new self(
             new VendingMachineSession(StandardCatalog::machine()),
             new ActionParser(),
-            new OutputFormatter(),
-            StandardCatalog::serviceSnapshot(),
+            $formatter,
+            new ServicePrompter($formatter),
+            new UsageGuide($formatter),
         );
     }
 
@@ -33,7 +39,13 @@ final class CliApplication
         $lines = [];
 
         foreach ($this->tokens($input) as $token) {
-            $formatted = $this->formatter->format($this->dispatch($this->parser->parse($token)));
+            $action = $this->parser->parse($token);
+
+            if ($action instanceof ServiceAction) {
+                throw new InteractiveServiceRequired();
+            }
+
+            $formatted = $this->formatter->format($this->dispatch($action));
 
             if ($formatted !== '') {
                 $lines[] = $formatted;
@@ -49,13 +61,43 @@ final class CliApplication
      */
     public function run($input = STDIN, $output = STDOUT): void
     {
-        while (($line = fgets($input)) !== false) {
-            $formatted = $this->process($line);
+        fwrite($output, $this->usageGuide->render());
 
-            if ($formatted !== '') {
-                fwrite($output, $formatted . PHP_EOL);
+        while (($line = fgets($input)) !== false) {
+            foreach ($this->tokens($line) as $token) {
+                $formatted = $this->formatter->format($this->execute($this->parser->parse($token), $input, $output));
+
+                if ($formatted !== '') {
+                    fwrite($output, $formatted . PHP_EOL);
+                }
             }
         }
+    }
+
+    /**
+     * @param resource $input
+     * @param resource $output
+     */
+    private function execute(ParsedAction $action, $input, $output): ActionResult
+    {
+        if ($action instanceof ServiceAction) {
+            return $this->session->service($this->serviceSnapshot($input, $output));
+        }
+
+        return $this->dispatch($action);
+    }
+
+    /**
+     * @param resource $input
+     * @param resource $output
+     */
+    private function serviceSnapshot($input, $output): ServiceSnapshot
+    {
+        if (!$this->session->machine()->insertedCoins()->isEmpty()) {
+            return ServiceSnapshot::create(CoinCollection::empty());
+        }
+
+        return $this->prompter->collect($input, $output);
     }
 
     private function dispatch(ParsedAction $action): ActionResult
@@ -64,7 +106,6 @@ final class CliApplication
             $action instanceof InsertCoinAction => $this->session->insertCoin($action->coin()),
             $action instanceof ReturnCoinsAction => $this->session->returnCoins(),
             $action instanceof SelectProductAction => $this->session->selectProduct($action->selector()),
-            $action instanceof ServiceAction => $this->session->service($this->serviceSnapshot),
             default => throw new UnrecognizedAction('unknown'),
         };
     }

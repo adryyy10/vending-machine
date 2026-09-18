@@ -1,6 +1,6 @@
 # Vending Machine
 
-CLI vending machine: insert coins, select a product, get change.
+CLI vending machine for inserting coins, purchasing products, get change and return coins.
 
 ---
 
@@ -37,11 +37,33 @@ You get an interactive prompt. Type comma-separated actions, one line at a time,
 
 Valid tokens: `0.05`, `0.10`, `0.25`, `1`, `GET-WATER`, `GET-JUICE`, `GET-SODA`, `RETURN-COIN`, `SERVICE`.
 
+`SERVICE` is interactive. The machine asks how many coins of each denomination to load, then how many of each catalog product to stock. Answers must be non-negative whole numbers.
+
+```text
+SERVICE
+How many coins of 0.05 we will have?
+3
+How many coins of 0.10 we will have?
+7
+How many coins of 0.25 we will have?
+7
+How many coins of 1 we will have?
+3
+How many WATER products we will have?
+5
+How many JUICE products we will have?
+8
+How many SODA products we will have?
+2
+```
+
 Pipe a line instead of typing:
 
 ```bash
 echo '1, GET-WATER' | docker compose run --rm -T app
 ```
+
+
 
 ### 4. Run the test suite
 
@@ -56,6 +78,8 @@ docker compose run --rm app vendor/bin/phpstan analyse src tests --level=8
 docker compose run --rm app vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no
 ```
 
+
+
 ### Troubleshooting Docker
 
 If `docker compose` is unknown, or you see `docker-credential-desktop: executable file not found`, Homebrew's `docker` is ahead of Docker Desktop on your `PATH`. In that shell:
@@ -64,6 +88,8 @@ If `docker compose` is unknown, or you see `docker-credential-desktop: executabl
 export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 docker compose run --rm app
 ```
+
+
 
 ### Without Docker
 
@@ -77,16 +103,21 @@ vendor/bin/phpunit
 
 ---
 
+
+
 ## Tech stack
 
-| Layer | Choice |
-| --- | --- |
-| Language | PHP 8.5 |
-| Dependencies | Composer 2 |
-| Architecture | DDD / hexagonal: `Domain`, `Application`, `Infrastructure` |
-| Delivery | CLI (`bin/vending-machine`) |
-| Tests | PHPUnit 13 |
-| Static analysis | PHPStan 2 (level 8) |
-| Coding style | PHP CS Fixer 3 |
-| Runtime for reviewers | Docker + Compose (`php:8.5-cli`) |
-| CI | GitHub Actions (PHPStan, CS Fixer, PHPUnit) |
+
+| Layer                 | Choice                                                     |
+| --------------------- | ---------------------------------------------------------- |
+| Language              | PHP 8.5                                                    |
+| Dependencies          | Composer 2                                                 |
+| Architecture          | DDD / hexagonal: `Domain`, `Application`, `Infrastructure` |
+| Delivery              | CLI (`bin/vending-machine`)                                |
+| Tests                 | PHPUnit 13                                                 |
+| Static analysis       | PHPStan 2 (level 8)                                        |
+| Coding style          | PHP CS Fixer 3                                             |
+| Runtime for reviewers | Docker + Compose (`php:8.5-cli`)                           |
+| CI                    | GitHub Actions (PHPStan, CS Fixer, PHPUnit)                |
+
+

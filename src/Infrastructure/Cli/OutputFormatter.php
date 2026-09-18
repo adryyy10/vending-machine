@@ -47,7 +47,7 @@ final class OutputFormatter
         return implode(', ', [...$products, ...$coins]);
     }
 
-    private function formatCoin(CoinDenomination $coin): string
+    public function formatCoin(CoinDenomination $coin): string
     {
         return match ($coin) {
             CoinDenomination::FIVE_CENTS => '0.05',

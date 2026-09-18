@@ -12,22 +12,22 @@ use Src\Domain\Product\ProductCode;
 use Src\Domain\Product\ProductSelector;
 use Src\Domain\Product\ProductSlot;
 use Src\Domain\Product\ProductSlotCollection;
-use Src\Domain\VendingMachine\ServiceSnapshot;
 use Src\Domain\VendingMachine\VendingMachine;
 
 final class StandardCatalog
 {
     public static function machine(): VendingMachine
     {
-        return VendingMachine::create(self::hopper(), self::slots());
+        return VendingMachine::create(self::hopper(), self::productSlots());
     }
 
-    public static function serviceSnapshot(): ServiceSnapshot
+    public static function productSlots(): ProductSlotCollection
     {
-        return ServiceSnapshot::create(self::hopper())
-            ->withQuantity(ProductCode::fromValue('WATER'), 5)
-            ->withQuantity(ProductCode::fromValue('JUICE'), 5)
-            ->withQuantity(ProductCode::fromValue('SODA'), 5);
+        return ProductSlotCollection::fromSlots(
+            self::slot('WATER', 65, 5),
+            self::slot('JUICE', 100, 5),
+            self::slot('SODA', 150, 5),
+        );
     }
 
     private static function hopper(): CoinCollection
@@ -37,15 +37,6 @@ final class StandardCatalog
             ->add(CoinDenomination::TEN_CENTS, 10)
             ->add(CoinDenomination::TWENTY_FIVE_CENTS, 5)
             ->add(CoinDenomination::ONE_HUNDRED_CENTS, 2);
-    }
-
-    private static function slots(): ProductSlotCollection
-    {
-        return ProductSlotCollection::fromSlots(
-            self::slot('WATER', 65, 5),
-            self::slot('JUICE', 100, 5),
-            self::slot('SODA', 150, 5),
-        );
     }
 
     private static function slot(string $code, int $priceMinor, int $quantity): ProductSlot
