@@ -107,6 +107,13 @@ echo '1, GET-WATER' | docker compose run --rm -T app
 docker compose run --rm test
 ```
 
+PHPUnit has two suites: `unit` (domain, application, CLI internals) and `acceptance` (customer and technician flows through `bin`-equivalent `run()`).
+
+```bash
+vendor/bin/phpunit --testsuite unit
+vendor/bin/phpunit --testsuite acceptance
+```
+
 Quality checks (same as CI):
 
 ```bash
