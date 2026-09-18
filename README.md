@@ -1,6 +1,6 @@
 # Vending Machine
 
-CLI vending machine for inserting coins, purchasing products, get change and return coins.
+CLI vending machine for inserting coins, purchasing products, getting change, and returning coins.
 
 ---
 
@@ -20,9 +20,47 @@ From the project root:
 docker compose run --rm app
 ```
 
-You get an interactive prompt. Type comma-separated actions, one line at a time, then press Enter. Inserting coins prints nothing; a purchase or `RETURN-COIN` prints the result. Press `Ctrl+D` to exit.
+You get an interactive prompt with a welcome screen listing every accepted action. Type comma-separated actions, one line at a time, then press Enter. Inserting coins prints nothing; a purchase or `RETURN-COIN` prints the result. Press `Ctrl+D` to exit.
 
-### 3. Try the spec examples
+---
+
+## What you can do
+
+By default the machine is stocked with **5 WATER**, **5 JUICE**, and **5 SODA**, and a hopper of **25 × 0.05**, **10 × 0.10**, **5 × 0.25**, and **2 × 1**.
+
+| Action | Accepted wording | What happens |
+| --- | --- | --- |
+| Insert a coin | `0.05`, `0.10`, `0.25`, `1` | The coin is added to the current session. Nothing is printed. |
+| Return coins | `RETURN-COIN` | All coins inserted so far are returned, largest denomination first (for example `0.10, 0.10`). |
+| Select a product | `GET-WATER`, `GET-JUICE`, `GET-SODA` | See [Selecting a product](#selecting-a-product). |
+| Service the machine | `SERVICE` | Interactive restock of hopper coins and every catalog product. |
+
+Default catalog:
+
+| Product | Price | Selector |
+| --- | --- | --- |
+| WATER | 0.65 | `GET-WATER` |
+| JUICE | 1 | `GET-JUICE` |
+| SODA | 1.50 | `GET-SODA` |
+
+You can combine actions on one line: `1, 0.25, 0.25, GET-SODA`.
+
+### Selecting a product
+
+On a successful purchase the machine prints the product first, then any change (`WATER, 0.25, 0.10`). Inserted coins are then cleared.
+
+If the selection cannot be completed, the machine **does not vend**, **does not take the money**, and **keeps every coin you have already inserted**. You can insert more coins, try another product, or type `RETURN-COIN`.
+
+| Situation | Printed message | Inserted coins |
+| --- | --- | --- |
+| Selector is not in the catalog (for example `GET-TEA`) | `UNKNOWN SELECTION` | Unchanged |
+| The product exists but quantity is 0 | `OUT OF STOCK` | Unchanged |
+| Inserted total is less than the price | `INSUFFICIENT FUNDS` | Unchanged |
+| The price is covered but the hopper cannot make exact change | `EXACT CHANGE UNAVAILABLE` | Unchanged |
+
+`SERVICE` is also refused while coins are inserted (`ACTIVE CUSTOMER SESSION`). Those coins stay in the machine until you vend or return them.
+
+### Spec examples
 
 ```text
 1, GET-WATER
@@ -35,9 +73,9 @@ You get an interactive prompt. Type comma-separated actions, one line at a time,
 → SODA
 ```
 
-Valid tokens: `0.05`, `0.10`, `0.25`, `1`, `GET-WATER`, `GET-JUICE`, `GET-SODA`, `RETURN-COIN`, `SERVICE`.
+### Service mode
 
-`SERVICE` is interactive. The machine asks how many coins of each denomination to load, then how many of each catalog product to stock. Answers must be non-negative whole numbers.
+`SERVICE` asks how many coins of each denomination to load, then how many of each catalog product to stock. Answers must be non-negative whole numbers.
 
 ```text
 SERVICE
@@ -63,9 +101,7 @@ Pipe a line instead of typing:
 echo '1, GET-WATER' | docker compose run --rm -T app
 ```
 
-
-
-### 4. Run the test suite
+### Run the test suite
 
 ```bash
 docker compose run --rm test
@@ -78,8 +114,6 @@ docker compose run --rm app vendor/bin/phpstan analyse src tests --level=8
 docker compose run --rm app vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no
 ```
 
-
-
 ### Troubleshooting Docker
 
 If `docker compose` is unknown, or you see `docker-credential-desktop: executable file not found`, Homebrew's `docker` is ahead of Docker Desktop on your `PATH`. In that shell:
@@ -88,8 +122,6 @@ If `docker compose` is unknown, or you see `docker-credential-desktop: executabl
 export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 docker compose run --rm app
 ```
-
-
 
 ### Without Docker
 
@@ -103,21 +135,16 @@ vendor/bin/phpunit
 
 ---
 
-
-
 ## Tech stack
 
-
-| Layer                 | Choice                                                     |
-| --------------------- | ---------------------------------------------------------- |
-| Language              | PHP 8.5                                                    |
-| Dependencies          | Composer 2                                                 |
-| Architecture          | DDD / hexagonal: `Domain`, `Application`, `Infrastructure` |
-| Delivery              | CLI (`bin/vending-machine`)                                |
-| Tests                 | PHPUnit 13                                                 |
-| Static analysis       | PHPStan 2 (level 8)                                        |
-| Coding style          | PHP CS Fixer 3                                             |
-| Runtime for reviewers | Docker + Compose (`php:8.5-cli`)                           |
-| CI                    | GitHub Actions (PHPStan, CS Fixer, PHPUnit)                |
-
-
+| Layer | Choice |
+| --- | --- |
+| Language | PHP 8.5 |
+| Dependencies | Composer 2 |
+| Architecture | DDD / hexagonal: `Domain`, `Application`, `Infrastructure` |
+| Delivery | CLI (`bin/vending-machine`) |
+| Tests | PHPUnit 13 |
+| Static analysis | PHPStan 2 (level 8) |
+| Coding style | PHP CS Fixer 3 |
+| Runtime for reviewers | Docker + Compose (`php:8.5-cli`) |
+| CI | GitHub Actions (PHPStan, CS Fixer, PHPUnit) |
